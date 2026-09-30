@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -220,7 +221,7 @@ def read_users(
     summary="Get user by ID",
 )
 def read_user_by_id(
-    user_id: int,
+    user_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Any:

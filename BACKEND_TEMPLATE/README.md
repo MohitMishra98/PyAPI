@@ -103,6 +103,9 @@ API_V1_STR="/api/v1"
 ENVIRONMENT="development"
 DEBUG=true
 
+# Frontend URL (Used for constructing verification & reset links)
+FRONTEND_URL="http://localhost:3000"
+
 # Secret key for JWT signing (replace in production!)
 SECRET_KEY="your-super-secret-jwt-key"
 ALGORITHM="HS256"
@@ -113,9 +116,14 @@ EMAIL_VERIFY_TOKEN_EXPIRE_HOURS=24
 # Database URL (PostgreSQL / Neon or SQLite)
 DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
 
-# Email / SMTP Settings (Optional: if empty, tokens log to terminal console)
+# Email / SMTP Credentials (Required for sending emails)
+SMTP_TLS=true
+SMTP_PORT=587
+SMTP_HOST="smtp.gmail.com"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASSWORD="your-app-password"
 EMAILS_FROM_EMAIL="noreply@example.com"
-EMAILS_FROM_NAME="FastAPI Template"
+EMAILS_FROM_NAME="FastAPI Production Template"
 ```
 
 ---

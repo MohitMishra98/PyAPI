@@ -36,6 +36,16 @@ def setup_test_db():
     Base.metadata.drop_all(bind=test_engine)
 
 
+@pytest.fixture(autouse=True)
+def mock_email_service(monkeypatch):
+    """
+    Mock email sending during tests to prevent external network calls.
+    """
+    from app.services.email_service import email_service
+    monkeypatch.setattr(email_service, "_send_email", lambda *args, **kwargs: None)
+
+
+
 @pytest.fixture(scope="function")
 def db() -> Generator[Session, None, None]:
     """

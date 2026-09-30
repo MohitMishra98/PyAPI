@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
@@ -22,8 +23,8 @@ class ItemUpdate(BaseModel):
 
 # Properties to return via API
 class ItemResponse(ItemBase):
-    id: int
-    owner_id: int
+    id: uuid.UUID
+    owner_id: uuid.UUID
     created_at: datetime
     updated_at: Optional[datetime] = None
 

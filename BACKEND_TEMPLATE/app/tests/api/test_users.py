@@ -157,7 +157,7 @@ def test_get_current_user_me(client: TestClient, user_token_headers: dict, test_
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["email"] == test_user.email
-    assert data["id"] == test_user.id
+    assert data["id"] == str(test_user.id)
 
 
 def test_update_current_user_me(client: TestClient, user_token_headers: dict):
@@ -172,3 +172,59 @@ def test_update_current_user_me(client: TestClient, user_token_headers: dict):
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["full_name"] == "Updated Name"
+
+
+def test_email_template_contains_button_and_raw_link():
+    """
+    Test that email content contains the button, raw link, and token.
+    """
+    import pytest
+    from app.services.email_service import email_service
+
+    captured = {}
+
+    def fake_send(recipient, subject, body_text, body_html=None):
+        captured["recipient"] = recipient
+        captured["subject"] = subject
+        captured["text"] = body_text
+        captured["html"] = body_html
+
+    # Test verification email
+    email_service._send_email = fake_send
+    test_token = "sample-verification-token-xyz"
+    email_service.send_verification_email("user@example.com", test_token)
+
+    expected_url = f"{settings.FRONTEND_URL.rstrip('/')}/verify-email?token={test_token}"
+    assert "Verify Email Address" in captured["html"]
+    assert expected_url in captured["html"]
+    assert expected_url in captured["text"]
+    assert test_token in captured["html"]
+    assert test_token in captured["text"]
+
+    # Test password reset email
+    email_service.send_password_reset_email("user@example.com", test_token)
+    expected_reset_url = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password?token={test_token}"
+    assert "Reset Password" in captured["html"]
+    assert expected_reset_url in captured["html"]
+    assert expected_reset_url in captured["text"]
+    assert test_token in captured["html"]
+    assert test_token in captured["text"]
+
+
+def test_email_service_requires_smtp_credentials():
+    """
+    Test that _send_email raises RuntimeError if SMTP credentials are missing.
+    """
+    import pytest
+    from app.services.email_service import EmailService
+
+    svc = EmailService()
+    # Ensure settings lack SMTP
+    orig_host = settings.SMTP_HOST
+    try:
+        settings.SMTP_HOST = ""
+        with pytest.raises(RuntimeError, match="SMTP credentials are not configured"):
+            svc._send_email("test@example.com", "Test", "Test body")
+    finally:
+        settings.SMTP_HOST = orig_host
+

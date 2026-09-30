@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -62,7 +63,7 @@ def create_item(
     summary="Get item by ID",
 )
 def read_item_by_id(
-    item_id: int,
+    item_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Any:
@@ -89,7 +90,7 @@ def read_item_by_id(
     summary="Update item by ID",
 )
 def update_item(
-    item_id: int,
+    item_id: uuid.UUID,
     *,
     db: Session = Depends(get_db),
     item_in: ItemUpdate,
@@ -118,7 +119,7 @@ def update_item(
     summary="Delete item by ID",
 )
 def delete_item(
-    item_id: int,
+    item_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Any:

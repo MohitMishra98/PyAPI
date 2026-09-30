@@ -1,3 +1,4 @@
+import uuid
 from typing import Generator
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -37,10 +38,11 @@ def get_current_user(
         token_type: str = payload.get("type")
         if user_id is None or token_type != "access":
             raise credentials_exception
-    except (jwt.PyJWTError, Exception):
+        user_uuid = uuid.UUID(user_id)
+    except (jwt.PyJWTError, ValueError, TypeError, Exception):
         raise credentials_exception
 
-    user = crud_user.get(db, id=int(user_id))
+    user = crud_user.get(db, id=user_uuid)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

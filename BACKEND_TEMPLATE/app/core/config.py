@@ -43,14 +43,17 @@ class Settings(BaseSettings):
             return json.loads(v)
         return v
 
-    # Email / SMTP
+    # Frontend URL for email verification and reset password links
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # Email / SMTP Settings (Required for sending emails)
     SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int] = 587
-    SMTP_HOST: Optional[str] = None
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    EMAILS_FROM_EMAIL: Optional[EmailStr] = "noreply@example.com"
-    EMAILS_FROM_NAME: Optional[str] = "FastAPI Template"
+    SMTP_PORT: int = 587
+    SMTP_HOST: str = ""
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAILS_FROM_EMAIL: EmailStr = "noreply@example.com"
+    EMAILS_FROM_NAME: str = "FastAPI Production Template"
 
     model_config = SettingsConfigDict(
         env_file=".env",

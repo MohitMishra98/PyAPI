@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -38,7 +39,7 @@ class UserUpdate(BaseModel):
 
 # Properties to return via API
 class UserResponse(UserBase):
-    id: int
+    id: uuid.UUID
     is_verified: bool
     is_superuser: bool
     created_at: datetime
