@@ -10,7 +10,7 @@ from app.crud.crud_user import crud_user
 from app.db.session import SessionLocal, get_db
 from app.models.user import User
 
-from app.core.clients import qdrant_client, groq_client
+from app.core.clients import qdrant_client, groq_client, google_client
 
 # OAuth2 scheme point to the swagger-compatible login endpoint
 oauth2_scheme = OAuth2PasswordBearer(
@@ -92,3 +92,7 @@ def get_groq_client():
 def get_qdrant_client():
     """Dependency to inject the Qdrant client"""
     return qdrant_client
+
+def get_google_client():
+    """Dependency to inject the Google client"""
+    return google_client

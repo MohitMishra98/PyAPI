@@ -219,16 +219,11 @@ def collect_playlist_transcriptions(
 
 
 def get_transcriptions(playlist_url: str, chunk_duration: float = 60.0) -> Dict[str, Any]:
-
-    if not playlist_url:
-        playlist_url = input("Enter YouTube playlist link: ").strip()
-
-    if not playlist_url:
-        print("[!] No playlist link provided. Exiting.")
-        sys.exit(1)
+    if not playlist_url or not playlist_url.strip():
+        raise ValueError("No playlist link provided.")
 
     result = collect_playlist_transcriptions(
-        playlist_url=playlist_url,
+        playlist_url=playlist_url.strip(),
         chunk_duration=chunk_duration
     )
 

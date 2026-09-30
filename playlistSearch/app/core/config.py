@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     EMBEDDING_SIZE: int = 384
 
     # AI MODELS
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    EMBEDDING_MODEL: str = "gemini-embedding-001"
     LLM_MODEL: str = "openai/gpt-oss-120b"
     GEMINI_API_KEY: str = ""
 

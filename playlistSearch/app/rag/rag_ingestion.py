@@ -1,4 +1,4 @@
-from sentence_transformers import SentenceTransformer
+import uuid
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, KeywordIndexParams, KeywordIndexType
 from app.core.config import settings
@@ -13,9 +13,12 @@ async def ingest(
     ):
 
     # create embeddings
-    list_of_transcription_entries = data.get("transcription")
+    list_of_transcription_entries = data.get("transcription") or []
+    if not list_of_transcription_entries:
+        print("No transcriptions to ingest.")
+        return
 
-    list_of_transcription_text = [text.get("text") for text in list_of_transcription_entries]
+    list_of_transcription_text = [text.get("text", "") for text in list_of_transcription_entries]
 
     print(list_of_transcription_text)
 
@@ -33,9 +36,9 @@ async def ingest(
 
     for i in range(len(list_of_transcription_text)):
         point = PointStruct(
-            id=i+1,
-            vector=text_embeddings[i].tolist(),
-            payload={**list_of_transcription_entries[i], "user_id": user_id}
+            id=str(uuid.uuid4()),
+            vector=text_embeddings[i],
+            payload={**list_of_transcription_entries[i], "user_id": str(user_id)}
         )
 
         points.append(point)
