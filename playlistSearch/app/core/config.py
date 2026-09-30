@@ -55,6 +55,18 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: EmailStr = "noreply@example.com"
     EMAILS_FROM_NAME: str = "FastAPI Production Template"
 
+    # RAG Settings
+    QDRANT_API_KEY: str = ""
+    QDRANT_URL: str = ""
+    GROQ_API_KEY: str = ""
+    COLLECTION_NAME: str = "knowledge"
+    EMBEDDING_SIZE: int = 384
+
+    # AI MODELS
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
+    LLM_MODEL: str = "openai/gpt-oss-120b"
+    GEMINI_API_KEY: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

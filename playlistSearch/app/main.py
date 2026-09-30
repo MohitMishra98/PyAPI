@@ -6,8 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.clients import qdrant_client, groq_client
 from app.db.base import Base
 from app.db.session import engine
+from app.db.vector_store import get_or_create_collection
+
 
 # Setup logging
 logging.basicConfig(
@@ -20,6 +23,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
+    Handles startup and shutdown logic for the FastAPI application.
     Application lifespan context manager: handles startup and shutdown logic.
     Creates database tables automatically if they don't already exist.
     """
@@ -29,6 +33,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.info("Database tables initialized successfully.")
     except Exception as e:
         logger.error(f"Error during database initialization: {e}", exc_info=True)
+    
+    
+    # Create the Qdrant collection if it doesn't exist
+    logger.info("Initializing Qdrant collection...")
+    try:
+        await get_or_create_collection(qdrant_client)
+        logger.info("Qdrant collection initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error during Qdrant collection initialization: {e}", exc_info=True)
     yield
     logger.info("Application shutdown completed.")
 

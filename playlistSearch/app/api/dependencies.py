@@ -10,6 +10,8 @@ from app.crud.crud_user import crud_user
 from app.db.session import SessionLocal, get_db
 from app.models.user import User
 
+from app.core.clients import qdrant_client, groq_client
+
 # OAuth2 scheme point to the swagger-compatible login endpoint
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/users/login/oauth"
@@ -82,3 +84,11 @@ def get_current_active_superuser(
             detail="The user does not have sufficient privileges.",
         )
     return current_user
+
+def get_groq_client():
+    """Dependency to inject the Groq client"""
+    return groq_client
+
+def get_qdrant_client():
+    """Dependency to inject the Qdrant client"""
+    return qdrant_client
