@@ -25,7 +25,6 @@ class User(Base):
     )
 
     # Relationships
-    items = relationship("Item", back_populates="owner", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email='{self.email}' verified={self.is_verified}>"

@@ -9,12 +9,7 @@ from app.schemas.user import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
 )
-from app.schemas.item import (
-    ItemBase,
-    ItemCreate,
-    ItemUpdate,
-    ItemResponse,
-)
+
 from app.schemas.token import Token, TokenPayload
 from app.schemas.msg import Msg
 
@@ -28,10 +23,6 @@ __all__ = [
     "ResendVerificationRequest",
     "ForgotPasswordRequest",
     "ResetPasswordRequest",
-    "ItemBase",
-    "ItemCreate",
-    "ItemUpdate",
-    "ItemResponse",
     "Token",
     "TokenPayload",
     "Msg",
