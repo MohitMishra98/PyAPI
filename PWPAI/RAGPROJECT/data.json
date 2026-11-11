@@ -1,0 +1,684 @@
+{
+  "playlist-name": "Building RAG Applications with LLMs",
+  "playlist-url": "https://www.youtube.com/playlist?list=PLbHrOSG7nVN040oDqKXEQDn6I1v8hdoeo",
+  "transcription": [
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "Have you ever built a Python project, run it on localhost, feel great about it, and the moment someone asks you, \"Can I try it?\" you realize you have no idea how to show it to them. You wish you could just send them your laptop. Now, that gap between a local demo and something real people can actually use, that's what cloud infrastructure solves. So, today I'm going to show you how to build and test a fully managed document QA pipeline on Amazon Bedrock using just the UI, no code required. You walk away understanding every component of a production rack pipeline and why HPs exist. At the end, I'll point you to some resources if you want to go deeper and actually write the Python code behind all of this. This video is sponsored by JetBrains Academy and AWS. More on that later. Let me first talk about why cloud skills are worth learning. If you're like most people watching this, you've probably built toy AI projects, you've used open source tools running things locally, maybe even built something you're generally proud of. But here's the thing, in an enterprise environment or honestly any serious project, you're not running things on localhost. Your company has",
+      "timestamp": "00:00:00"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "cloud infrastructure, that's where the data lives, that's where the security and access controls are, and that's where your application needs to run if other people are going to use it. In my previous job, this was a strict policy. You weren't allowed to share personally hosted apps for security and compliance reasons, so my colleagues and I sometimes shared them underground like we were handling black cash money. Cloud providers like AWS, Google Cloud, and Azure also give you something else, managed service. So, instead of building and maintaining every piece of the stack yourself, you can use pre-built infrastructure for storage, databases, authentication, AI models, and so on. You focus on the application logic and the cloud handles the rest. AWS is the most widely used of the three and we're using it today, but in reality, you can apply the same principles to other providers. The concepts I'll show you are almost identical across all of them. For this demo, let's consider a real-world scenario. Imagine you're working at an insurance company. Your company has hundreds of internal",
+      "timestamp": "00:01:01"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "documents, policies, compliance guidelines, financial reports from different years. Your colleagues constantly need to look things up and right now that means digging through photos, sifting through PDFs, or asking a colleague who probably doesn't know either. You want to build an internal chatbot. Your colleagues ask question in plain English and the bot finds the right answer from your company's data with source citation so people can actually cross-check the answer. This is a rack application which stands for retrieval augmented generation. I've actually created a few other videos on building rack app from scratch on the channel in Python and LangChain. I'll link on screen over here. If you're not yet familiar with it, the idea is simple. You first retrieve the most relevant documents from your own knowledge base, then pass those documents to the model along with the question, and the model's job is to synthesize an answer from what you gave it. It solves a real problem. Foundation models only know what they were trained on. Their knowledge is cut off and they have no idea what's in your company's",
+      "timestamp": "00:02:01"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "database, your insurance policies, your financial reports. A rack system gives them that knowledge without you having to retrain or fine-tune anything. Some people think that modern LLMs with massive context windows have made rack obsolete. They ask, \"If you can fit a million tokens into a prompt, which is essentially the entire Harry Potter book series, then why build a retrieval system at all?\" Well, the problem is stuffing everything into the prompt every time gets expensive fast. And those big calls run slow. So that latency is not good for user experience. And worse, models actually get sloppy when the important stuff is buried under a pile of irrelevant text. Rack sidesteps all of that by pulling in only what's relevant so you end up faster, cheaper, and more accurate. So now we're going to build this rack demo using Amazon Bedrock's managed UI, which is hands-on and we're not using code. This helps you focus on the concept without getting lost in the coding details and all the devops complexity. Sounds good?",
+      "timestamp": "00:03:03"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "Let's dive in. Amazon Bedrock is AWS managed service for building AI applications. The keyword is managed. AWS handles all the infrastructure underneath. You don't spin up GPU servers, you don't install anything. You just access it through the console or all the API. What makes Bedrock interesting is that it gives you access to multiple foundation models. For example, Claude from Anthropic, Amazon's own Nova and Titan models, Meta's Llama models, Mistral, Cohere and so on. They're all accessible through one API. In a real project, that means you can swap models without rewriting your infrastructure. Now, let's head to AWS console and if you don't have an account yet, we need to create an account. So, let me go ahead and do that. You can choose your account plan and for now I'm going to use the free account. You just need to follow the sign-up instructions and once you're done, you can access the AWS console here. If you just signed up for AWS, you probably logged in as a root user and think of root as the god",
+      "timestamp": "00:04:04"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "account. It has unlimited power over everything, which is exactly why AWS wouldn't let you use it for day-to-day stuff. For example, you won't be able to create a knowledge base with this account. So, let's create a proper user real quick. So, let's search for IAM in the console and go to users and then create user. Give a name like Bedrock admin or in the in my case I'm just saying my name here and take the option that says provide user access to the AWS management console and I'll let it create a password for me automatically and I'll change it later and hit next. On the next screen, we choose add user to group and then create group and here we'll just call this group um admins. And let's search for the administrator access in the policy box, and we'll take this result over here, and then we can click create user group. Now, once that you created this new group, make sure that this group is ticked back on the permission screen, because otherwise your user won't be added to this group.",
+      "timestamp": "00:05:07"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "And then click next and create user. AWS now will flash a screen with your sign-in URL and credentials. Don't skip past this. Just download everything before you close it. And then let's follow this link to sign back in as a new user using the credentials that you just downloaded. And then we are good to go. Now, let's go to the search bar over here and search for Bedrock. And you see under services here, we have Amazon Bedrock, the easiest way to build and scale generative AI applications with foundation models. So, let's choose this one. All right. Now, we're heading to the knowledge bases under the left side bar. A knowledge base is what connects the language model to your documents. With the knowledge base, the model can search your documents and answer based on what's actually in them. Now, let's go ahead and create a knowledge base by clicking on this create button over here. You see here a drop-down with a few options. For our use case, we select knowledge base with a vector store because we are working with unstructured",
+      "timestamp": "00:06:09"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "documents, plus we need a vector store. Next, let's give our knowledge base a name, something like insurance internal KB, and then you'll be prompted to set up a service role. A service role is simply you telling AWS Bedrock has permission to access my data in this knowledge base and work with other AWS services on my behalf. You can let AWS create this automatically. Under the hood, it's creating an IAM role. IAM stands for identity access management. It's basically a system for controlling who can access what. For now, just let it create this row automatically. In the next step, we're going to connect your data source. This is where you tell the knowledge base where your documents are. The most common option is Amazon S3, Amazon's object storage service. You can think of it like a very scalable file system in the cloud. You upload your PDFs, your word documents, text files, whatever you have into an S3 bucket. And",
+      "timestamp": "00:07:10"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "then Bedrock reads from it. For our demo, we use S3. Now we're going to configure the actual data source and it's already pointing at Amazon S3. Before we go any further, let's actually get our documents into S3. So let's open the AWS console in a new tab and search for S3. Hit create bucket and give it a name like insurance demo docs, for example. And here's the one thing you really need to pay attention to. Make sure that the region matches whatever region you're using in Bedrock because if they're different, and in my case you can see the region is US East 1 because if the regions are different, Bedrock wouldn't be able to see your bucket and you'll spend 20 minutes having no clue why that is. I'll leave everything else as default and create the bucket. I'm dropping here two documents about flood insurance as an example. One is actual insurance policy, the full legal contract, and the other one is plain",
+      "timestamp": "00:08:10"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "language summary that explains the same policy in simpler terms. Now flip back to your Bedrock tab. We'll configure our data source and the first thing is the data source name. This is just a nickname for this connection and I'll call it something like insurance demo S3. It doesn't matter much now, but if you ever add multiple data sources later, you'll be glad you named it something sensible. Then there's S3 URI that we need to enter, and this is just the address of your bucket, and you can type it in or just click browse S3 and pick it from the list. That's way easier. Lastly, there's a parsing strategy section. There are three options here, but let's choose the default one for just normal PDFs and text documents. The other options are for more complex documents that have images or tables. So, if your documents have that, you can consider using them. And now, let's move on. We will choose",
+      "timestamp": "00:09:10"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "an embedding model. This is one of the most important steps in a rack system, and it's worth understanding properly. A language model works with text, but to search your documents efficiently, especially across hundreds or thousands of them, we need a way to represent text as numbers, and that's what an embedding model does. It takes a piece of text and converts it into a vector, essentially a long list of numbers. The key thing here is that text with similar meaning ends up with similar vectors. If you want to learn more in-depth about text embeddings, I have another video over here, so feel free to check it out. So, for example, when a user asks, \"What's the deductible for flood damage?\" the embedding of that question will be mathematically close to the embedding of the paragraph in your policy document that talks specifically about flood coverage, even if the exact words don't match. Bedrock offers Amazon's Titan embeddings. It works well for most use cases, so I'll select it and move on.",
+      "timestamp": "00:10:12"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "Next, we'll choose a vector database. Your documents get embedded into vectors, but those vectors need to be stored somewhere so that they can be searched quickly. That's what a vector database essentially does. Bedrock gives you several options, so the first one is Amazon OpenSearch Serverless, that is Amazon's own managed option, and a few other options. For quick demo, we use the quick create option and let Bedrock basically set up the OpenSearch serverless for you. In a real production setup, your choice of vector database matters more. You need to think about scale, cost, and whether you need additional features like metadata filtering, and that would determine which vector database you use. But, for loading purposes, OpenSearch serverless is fine. Now, once everything is configured, you trigger a sync. And, this is the process where Bedrock reads your documents from S3, chunks them into smaller pieces, and",
+      "timestamp": "00:11:13"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "runs each chunk through the embedding model and create the vector embeddings for them. And then, it stores the resulting vectors in your vector database. Depending on how many documents you have, this can take a few seconds to a few minutes. And, you'll see the sync status in the console. Once the sync is complete, Bedrock gives you a built-in test environment right inside the console. You can select the model you want to use for retrieval and response generation. In this case, I'm choosing Claude Sonnet 4.6. So, now, let me ask something specific to these flood insurance documents. For example, what does flood insurance cover? And, here's the answer with all the details based on the documents that we put in our knowledge base. And then, I have another more specific question. Does flood insurance cover hotel if I can't stay in my home? And, the answer is no, which is a correct answer. And, if you click on the link here, you'll also see which",
+      "timestamp": "00:12:13"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "source documents it referenced and even which part of the document that is. And, this is really important for double-checking the answer, debugging, and evaluating your RAG system. So, so far, we've used the Bedrock UI to set everything up. Now, that's great for understanding concepts and prototyping quickly, but in a real production deployment, you typically do this through code because that way you have much more control and more customization. Using the AWS SDK, a software development kit, infrastructure as code tools like Terraform or CDK, and probably a custom front end and a back end application with fast API, for example, that handles user authentication, query logging, and response formatting. That's a much longer journey. It involves learning Python, the AWS SDK, IAM in more depth, networking, and deployment pipelines. If you want to go from this UI demo to actually writing the code, and you want to do it without setting up your own AWS account or risking a surprise bill, I have a recommendation. JetBrains Academy",
+      "timestamp": "00:13:14"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=rd2gqhCcKQU",
+      "videotitle": "How to Build Your First Production RAG Pipeline (in 15 Minutes)",
+      "text": "and AWS recently co-created two skill paths designed for exactly this transition. You work in PyCharm, a real IDE, not just a browser-based code editor. You get access to hands-on AWS sandbox labs where you can spin up SageMaker clusters, configure Bedrock agents, and deploy endpoints, all in a pre-paid sandbox environment. So, you don't need a personal AWS account. One path takes you from Python fundamentals all the way to deploying a queryable LLM endpoint, and the other path focuses on building a Bedrock-powered RAG chatbot, exactly what we covered today, but in code. You also get a co-branded certificate from both JetBrains Academy and AWS when you finish. There's a 7-day free trial, so try it out. I'll put the link in the description. Thanks for watching. See you in next video. >> [music]",
+      "timestamp": "00:14:16"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "Knowledge graphs aren't just fancy way to represent information, they are a powerful way to help AI actually reason over it. In today's video, we're building a graph rack system to ask question and understand the topic of AI copyright. This topic is a mess and I mean that in the most interesting way possible. It's one of the complex topics that everyone talks about but no one actually understand what's going on. The information isn't sitting in one place, it's scattered across hundreds of news articles, court filings, policy documents and hot takes published across the web. So in this video, we are going to build a system that scripts that information live from Google News, turns it into a structured knowledge graph and then use graph rack to ask questions no search engine or standard AI could reliably answer. For example, which companies are the center of these disputes and how are they all connected? By the end of this video, you know exactly what graph rack is, why it got all the hype, how it works and when to",
+      "timestamp": "00:00:00"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "use it. And finally, I'll show you how to build it yourself on a real complex document data set you may have. I'll share a code walk through later in this video for this project. Before we jump in, a quick thanks to Serb API for sponsoring this video. Serb API is what we're using to script Google News results for our data set in this project. It gives you real-time structured clean search results from Google and other search engines through a simple API. So no browser automation needed and trust me, that makes your life a lot easier. I'll link it in description below for you to check out. Let's get into it. Now, let's start with a quick recap of how standard or naive rack retrieval augmented generation works because understanding its limitations is what makes graph rack click. In a typical rack pipeline, you take your documents, so PDFs, articles, text files, transcripts and split them into chunks. Each chunk gets converted into a numerical vector using an embedding model. These vectors capture",
+      "timestamp": "00:01:00"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "the meaning of the text, so chunks about similar topics end up close together in what we call the vector space. Then, when a user asks a question, the system converts that question into a vector, too, finds the chunks closest to it, and pulls those chunks and feed them into the LLM as context. And the LLM then generates an answer based on the question and the context that it was given. This system is great because it allows the LLM to answer questions about data it was never trained on. Things like your company's internal documents, your research papers, your customer tickets, whatever. But here's the problem. As you have more and more data, the accuracy drops. One study found that vector search accuracy starts degrading at just 10,000 pages, reaching a 12% accuracy drop by 100,000 pages. The more documents you add, the more overlap you get in the embedding space, and the harder it becomes for the system to",
+      "timestamp": "00:02:01"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "retrieve the right chunks. But scaling isn't even the main issue. Standard RAG has two more fundamental blind spots. The number one is each chunk is treated as an isolated fragment. Once documents are split and embedded, every chunk exists on its own, disconnected from the chunks around it and from related information in other documents. The system may find text that sounds related to your question, but has no understanding of how those fragments connect to form a complete picture. The blind spot number two of the standard RAG system is that it has no ability to reason across documents. When an answer requires linking information scattered across multiple sources, or when the question is about the data set as a whole, like what are the main legal arguments around this topic, or what are the main themes emerge from these documents, then standard RAG has no mechanism for it. This is the problem GraphRAG was built to solve. GraphRAG",
+      "timestamp": "00:03:02"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "adds a structural layer on top. Here's a core idea. It uses an LLM to read each chunk and extract the entities, for example, people, companies, technologies, events, legal cases, and the relationships between them. These entities become nodes in a knowledge graph, and the relationships become edges connecting them. The result is a structured graph of your entire data set that reflects how the information actually relates across documents. Microsoft Research, who originally published the GraphRAG paper, calls this sense-making, the ability to understand connections, patterns, and themes across a large body of information, rather than just retrieving isolated facts. Using a knowledge graph has been shown to improve LLM response accuracy. Now, I want to be clear with you about something. GraphRAG doesn't replace standard vector RAG. They're good at different things. Here's the simple rule. I'd use GraphRAG when you're working with hundreds or thousands of",
+      "timestamp": "00:04:02"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "interconnected documents, or questions require connecting facts, tracing relationships, or identifying patterns, or you need big picture answers, for example, themes, trends, summaries across an entire data set. You also want transparency and ability. You need to trace how the system arrived at an answer. And so, in general, using GraphRAG approach for your Q&A system makes sense if you are working in domain like law, policy, or research, where accuracy on complex queries is critical. On the other hand, you can use standard vector RAG when the questions are direct fact lookups. For example, when was this law passed, or who filed this lawsuit? Also, when the answer lives inside a single document or chunk and speed and cost are the priority and your data set is small and doesn't have dense across document relationships. All right, now let's get into how graph rag actually works under the hood. There are two main phases in a graph rag system. The first",
+      "timestamp": "00:05:02"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "one is indexing where you build the knowledge graph from your database and the second one is querying where you actually retrieve information from it. This is a general pipeline. Microsoft's approach which our project follows extends it into two additional steps. So, community detection, we are grouping related entities into clusters and the other step is community summarization where we generate our LM summaries for each cluster or each community. At query time, these summaries are queried instead of the raw graph which is what makes it particularly effective and fast for big picture questions. All right, let's head over to VS Code and I'll show you step-by-step how this project works. In this project, I've prepared two Jupiter notebooks. The first one is script_info.ipynb. This is where we script information the Google search results for this topic, AI copyright and governance and the other notebook is solely dedicated to",
+      "timestamp": "00:06:03"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "implementing the graph rag pipeline. So, let me walk you through first how I script the Google search results with SerpApi. SerpApi is really cool. If you look at their website and look at the APIs here, there's a list of all different kinds of APIs that you can use to collect data from the web. So, this is going to be really, really handy if you want to collect data yourself on any topic out there. In my case, I'm going to use Google search API and here's the playground where you can test out for free. So, for example, if I search a query, for example, how to make cappuccino. Here's the location and we don't need to select the location. So, let's search for this query. And here you can see there's a bunch of search results that that comes back. And here's the rest of the search results. And you can see that there's a bunch of websites. And on the right side, we can see this is the JSON response that we",
+      "timestamp": "00:07:04"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "would get if we call the API for this search query. So, the API has a free so you can try it out for free. In my case, I have a free plan as well and you can generate your own API key for your project. All right, back to the project. First, I'm going to install some dependencies for this project. So, the three big ones here firstly Google search results. So, this is the Python client for Serp API. That's the service that lets us search Google programmatically. And next we have the Trafilatura. This is a library we use for extracting article text from web pages and YouTube transcript API which grabs transcripts from YouTube videos. So, these are the main libraries that we'll be using. Next, we go to the imports and configuration. So, here are just importing all these modules that we need. I've already saved my API keys in this",
+      "timestamp": "00:08:06"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": ".env file. So, we just need to load them instead of hard coding the API keys in the notebook. We also set the maximum number results to 10 which is how many search results we want per query. So, normally you will get Yeah, you you actually get 10 articles for the first page of the Google search. But if you want to have only five or seven first articles, you can also specify it here. On the The hand, if you want to collect results from multiple pages from Google search, then you have to call the API multiple times. Next, I defined a function called collect search results that basically takes a query or list of queries. For example, how to make a cappuccino or in our case, AI copyright lawsuits. Then, we also take the number of results. So, I default it to the maximum number of results for each query. And then this function basically loop over all the queries and",
+      "timestamp": "00:09:07"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "uh call the API with with with this basically with this uh lines of code. So, use the Google search module here and apply the parameters that we defined here. So, we defined the engine as Google, query is the query, Google domain is the google.com, and the language is English, etc. And finally, the API key that is our API key. So, here we get back the search results. And finally, I just um get back the dictionary. And then we just need to append the results for each query to the raw results variable. And really, the rest is just bookkeeping and just uh keeping all the results in in a certain format. In this case, this is um I turn it into a data frame. And in the end, remove the duplicated URLs. So, the same article, same website may appear in the search results for different",
+      "timestamp": "00:10:11"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "queries. So, I want to avoid that. And so, I remove all the duplicates and return the data frame together with the raw results. And let's just run this. And here we actually run this function collect search results for these two queries, AI intellectual property and copyright generative AI. You can swap out these out for whatever topic you are researching. So, I'll just quickly run this and the output is basically a to- table with 10 articles collected. Oh, actually it's 20. So, 10 articles each. And here I just want to give a quick peek at the full raw API response that we actually got. So, this is a list of the search results for these two different queries. So, this is useful for debugging and it's not really critical at all. So, I just know that this is the raw result that we actually got um to produce this table. Now, the next step is to actually scrape text",
+      "timestamp": "00:11:12"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "from articles and videos that we got from the Google search results. So, based on all these different URLs for all these different articles and videos, we can actually scrape the text from them. So, the full article text and not only the short snippets here that show up on the Google search. So, these scrapers are really the core of this notebook. And here for the scraping of the articles, I'm using the Trafilatura library. Oh my god, this is such a difficult library name. And this module basically downloads a web page and strips away all the junk. For example, the navigation bars, the ads, the footers to give you just the article text. So, it's way better than trying to parse the HTML yourself with Beautiful Soup or whatever other library for web scraping. And then for the YouTube transcripts, I just extract all the video IDs from the URL with a regex. So,",
+      "timestamp": "00:12:13"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "here is a regex that allows me to extract the video ID from an URL. And then the get transcript function basically take the video ID that we got and call the YouTube transcript API to get back the transcript. So, the whole thing is tied together in this in rich search results function. It takes the data frame that contains the information for the articles and for the videos and then add the full text column with the results. So, here if I just run it for you and let's see this in action. So, here we go. The output here is a data frame again with all the 20 articles and videos that we got from Google search, but the difference is now we have the full text column that contains the text or the transcript from articles and videos. So, note that I also have to removed some of the articles here that",
+      "timestamp": "00:13:15"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "maybe some articles might be behave or they have bought protection or some videos just don't have captions. So, we only keep the results that have the status success. So, this gives us only the usable results. This is the final final output and we can take a look at this and finally I just save it into a CSV file called AI copyright data set. And the idea is we will use this full text the full text column all the text from the articles that we scraped to create the knowledge graph and build a graph rack pipeline on top of it. That is it for collecting real world data. The next step is to actually build the graph rack pipeline. All right, so, in this part I'm going to walk you through a full graph rack pipeline from scratch. And what we are building here is a knowledge graph on top of the data set that we just scraped with sub API about AI copyright and governance and then build a knowledge graph and detect communities within this graph and then",
+      "timestamp": "00:14:19"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "generate community summaries and visualize this graph and finally query using graph rack. So, the key packages that we are going to need here is llama index, which is the framework we are building on. We also have grasp a logic. So, this is a library that gives us the Leiden algorithm for community detection. And for visualization, we're going to be using d3.js and not by this, sorry. So, going to remove this here. All right, so we go to import and configuration. So, basically import all the things that we need and also load the API keys for open AI because I'm going to use open AI models. So, we're going to need open AI API key over here. All right, moving on to configuration. We use two different models and this is simply for cost optimization. GPT-4o mini handles all the heavy lifting. So, the extraction and community summarization because that work is repetitive and high volume. You",
+      "timestamp": "00:15:21"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "certainly don't need the smartest model for that, but for the final query synthesis, we switch to GPT-4o, which has better reasoning quality. And here larger model is better. So, the rest of this cell is basically it's pretty self-explanatory. So, we have the extraction LLM being GPT-4o mini. The query LLM is GPT-4o. We process up to 50 articles and we extract up to 20 entity relationship entity triplets per chunk. Here I call it per chunk, but actually it's per article because I didn't actually split the articles into chunks because I found that the articles are not super long, so I just skip this chunking step. And we also run four parallel workers for the extraction to speed things up. All right, moving on to the next step, which is to define the ontology, and this is one of the most important steps that people often skip.",
+      "timestamp": "00:16:22"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "The ontology, as I mentioned earlier, is the schema of our knowledge graph, and it tells the LLM exactly what types of entities and what types of relationships it's allowed to extract. So, it's really, really important. And for this particular use case about uh uh on the AI copyright and governance, I define below in this cell seven entity types and eight relationship types. Uh and here we just basically put it in a list like so. The entity types include the organization uh like companies or labs or in industry groups. And here we have the list of relationship types that we want to extract. So, for example, filed against or defendant in, for example, OpenAI is the defendant in The New York Times lawsuit. Uh or regulates or trained on or part of. So, one person can be part of an organization. So, how you define ontology really depends on",
+      "timestamp": "00:17:23"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "your particular use case or your domain knowledge. And here is just a very basic example of how you might want to do that. So, let me run this cell. And so, here we have the entity types and relationship types printed out. The next step is the extraction prompt. In this step, we basically specify an uh a a prompt template. And this prompt template is going to take the allowed entity types and allowed relationship type that we defined in our ontology. And then, it specify the goal. Given a news article about AI copyright, governance, and intellectual property, identify all entities mentioned in the article and their relationships. Extract up to how many triplets or relationship energy triplets that um we have defined before, that is 20. And um steps is first identify all entities. And for",
+      "timestamp": "00:18:24"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "each entity extract these different fields. Firstly, name, uh the type, and the description. For example, OpenAI um being an organization and description. So, for example, this is a an AI provider. So on and so on. The second step is to identify relationships between those entities. And for each relationship, extract the source of the relationship, so the name of the source entity, and then the target entity, and the actual relationship. So, uh for example, it can be defendant in, so OpenAI is defendant in the New York Times lawsuit, and the description of this relationship. So, just one sentence explaining why and how these entities are related. And the reason why we want to get all these descriptions here for the entities and relationships is because that is going to provide extra contact um for us later when we generate",
+      "timestamp": "00:19:25"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "the community summaries. It's going to enrich those summaries. And finally, we just pass in the real article text here for the extraction. Now, let's run this cell, and here is just a preview of this uh this prompt printed out. Now, in the next step, we have the Pydantic extraction models. So, instead of passing raw LLM text with regex, so for example, it gives an output like this, which is fragile and very annoying to pass. We define three models. The first one is extracted entity, which has the name, the type, and the description corresponding to the information we want to extract for each entity. And then we have the extracted relationship, which has source, target, relation, and description. And the third data model is the extraction result that basically wraps a list of extracted entity and a list of extracted relationship together in one data data object. All right, so",
+      "timestamp": "00:20:26"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "let's run this one. And so we have these models defined. Now, the beautiful thing about using these Pydantic schemas is that later when we pass these schemas to Open AI as a function calling schema, the output that is returned from the LLM will be automatically validated and typed. We don't need to manually pass the outputs, which can be really, really annoying and messy. The structured output or the structured JSON that gets returned by the LLM will be automatically validated and typed. So, we don't need to manually pass those outputs and do some messy string manipulation ourselves, and which can be very, very annoying. Also, if the LLM tries to return, for example, an extracted entity that doesn't fit the schema, that output just gets automatically rejected. So, that is a huge benefit of using Pydantic for output validation. Next, we go to the graph rack extractor. So, this is really, really the core of the knowledge graph extraction engine. This is quite a",
+      "timestamp": "00:21:29"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "big class and there's a bit of code in there. So, let me just explain this for you in a plain English. Here's what it does for each article. So, the first step it is to call the LLM and sends it to the LLM using a structured predict function here and together with our extraction results, the Pydantic schema that we defined in the last step. And then the result would be a validated extraction result with entities and relationships. And in step two, we are going to convert these extracted entity into um entity node object. And in step three, we also do the same for the relationship. Basically, taking all the relationships that we extracted and convert them into relation object. And the entity node and relation objects are basically just the way that LlamaIndex store data for",
+      "timestamp": "00:22:30"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "entities and relationships. That's just the data model that they they use. And representing the entities and relationships that way makes our data compatible with uh LlamaIndex later. And in step seven, we define the graph rack store. So, this is where we convert our knowledge graph to a NetworkX graph. Then, we run the community detection algorithm called hierarchical Leiden to find entity clusters. And then, for each cluster, we collect all the entities and relationships and ask the LLM to write a summary for each of those clusters. So, it's like a writing a briefing note to present what this community is about. Just a quick note here, if you're not familiar with the concept of property graph, property graph is just a knowledge graph where relationships not only are connections between entities, but they also carry a name, which is a type of relationship, and some other",
+      "timestamp": "00:23:33"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "properties. So, in this case, we might have description of the relationship or some other properties. All right, let's go ahead and define this class, and we'll see how how it works in a bit. And then, the the next step, we have the graph rack query engine, and this is where query actually gets answered. So, it used a two-step approach. The first step is per community answering. For each community summary, we ask a cheaper model, so here in this case GPT-4o mini, whether it can answer the question based on that summary. If the summary isn't relevant to the question, it will return no relevant information and we just skip it. And we just do this for all community summaries. This is smart because most communities won't be relevant to any given question and so we don't want to waste tokens on them. And in the step two, we take all the relevant partial answers based on all the different community summaries and",
+      "timestamp": "00:24:34"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "send them to a stronger model. And in in this case is GPT-4o to synthesize into one final and clean response. So, this is the code for this GraphRAG query engine. And here you can see that we have two steps here. Step one is the get the partial answer from each community summary and step two is to aggregate those answers in one final answer. So, that is it for this GraphRAG query engine. Now that we've got all the configuration and all the necessary classes, we now will start loading our actual article data set that we've seen before and this is the article data set containing the full text for the articles and then we wrap articles as document. We have the article text goes in as the main content",
+      "timestamp": "00:25:36"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "and we have the metadata here being containing the title, source, and date. So, no chunking is needed here because the articles are short enough to fit in the LLM's context window as is. So, I skip the chunking part. So, here is all the text in this fourth document in our notes list. So, here is the actual article text. And so, let's move on to building the knowledge graph. This is where it all comes together. We instantiate the graph rack extractor and the graph rack store. And then we will pass the graph rack extractor and the graph store into the llama index property graph index. The index here handles the full workflow automatically. It takes the document, so the nodes, passes it through our extractor, so the knowledge graph extractor, and the",
+      "timestamp": "00:26:36"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "extractor calls the LLMs and gets back the structured entities and relationships and stores them in the graph store. So, this is where everything happens. And this is actually the most time-consuming step in the whole notebook. It's making LLM calls for every single article. So, let me quickly run this cell. All right, now this is running and we are building the knowledge graph from all the documents that we have. This may take a few minutes, so let me just speed this up. All right, we've just finished building the knowledge graph. So, let's print out an example article. Here is an example article together with all the extracted entities and relationships that that were identified from this article only. So, one organization is Darrow Everett LLP, the government, the US Copyright Office, AI system, Creative the Machine, AI system ChatGPT,",
+      "timestamp": "00:27:36"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "um AI system Midjourney, and so on. And then we have the relationships. They are um the US Copyright Office references um Creative the Machine um and regulate copyright act, so on and so on. So, these are all the relationships among all these different entities. It's a nice sanity check to make sure that the extraction is working properly. And you can also print out all the unique entities that were identified just to be sure that we don't have any weird stuff going on over here. So, for each different type of entities, we have these different things. Some of the entities were not extracted properly, so it falls back to just call it entity. And for example, here 10,000 responsive comments, generative AI copyright disclosure act. I'm not sure why it was not categorized properly, but these really didn't happen very often,",
+      "timestamp": "00:28:37"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "so I didn't bother. The rest of the entities look pretty okay to me, so I just go on with the next step. In step 12, we start building the communities and generate summaries for them. And this line basically runs the Leiden community detection, clusters the entities, and then we generate the summaries for each cluster. Let's run this cell, and I'm also printing out all the summaries from the communities as well. So, here you can see community zero. This cluster encompasses key entities and concepts related to AI copyright and governance, including blah blah blah. Community one, on the other hand, centers around the European AI EU's AI Act, so on and so on. Cool. Once that's done, we move on to the next step, which is really fun. That is about visualizing the knowledge graph that we've got. Here I'm using d3.js, and we basically this cell basically exports",
+      "timestamp": "00:29:37"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "the graph that we have to a JSON file called graph data.json. I've already run this, so that's why you see it here. And then we inject it into a D3.js HTML template. So, this is the graph template. Claude did this for me, and it's really nice now that AI can do a pretty decent job at this. Now, the visualization has been saved to the AI copyright graph.html file. So, let me quickly go live here and show you what it does. And here is the visualization. This is HTML file. This is network graph. Looks pretty cool, right? And you can see that we have different entity types that are coded in different colors. I've also instructed Claude to make the size of the nodes correspond to the number of connections that it has. So, for example here, we can see that we have OpenAI here. And if we click on",
+      "timestamp": "00:30:39"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "here, see that these are the different connections that it has. OpenAI has one legal case that is connected to New York The New York Times. It's good to note that the visualization itself is not essential for the GraphRAG to work, but it's great for presentations and for understanding what your graph actually looks like. Finally, we get to query the system. This is really the end goal that we want to reach. Here we create a query engine that contains the graph store and the query LLM, which is GPT-4o, for final synthesis. So, let's define this query engine, and then we can start asking question to this query engine. The first question I want to test is a big picture kind of thematic question. What are the main legal arguments being made around AI copyright and training data? So, let's run this one. We pass this query to the query engine and basically call",
+      "timestamp": "00:31:40"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "this custom query method and just wait and see what comes back. And in this question, no single article has the full answer. Standard rack pipeline will struggle here, but GraphRacks synthesizes across multiple communities and it should be able to give a more comprehensive answer. All right, here's the answer. The main legal arguments around AI copyright and training data focus on several key issues. Authorship and ownership, use of training data, fair use doctrine, regulatory frameworks, legal reform, economic and ethical implications. So, these are five main arguments. So, it's pretty cool. And moving on to the next test I want to do that is a question that concerning cross-entity relationships. For example, which companies are involved in AI copyright and governance disputes and what are their positions? The answer comes back with several companies involved in disputes. Stability against",
+      "timestamp": "00:32:41"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "artists and lawsuits from Getty Images, Midjourney against Darrow Everett LLP, and OpenAI facing and Microsoft facing copyright infringement lawsuit from The New York Times and so on and so on. So, this is an example of cross-entity relationships. Traditional rack pipeline would really struggle to give a complete answer. Question number three is about comparative policy question. For example, how different governments are approaching AI governance? And the answer is, \"I don't have enough information in the knowledge graph to answer that question.\" This actually surprised me, but I'm guessing that most articles are about the US and not about other governments like EU or the UK. So, probably there's really not enough information for comparison. So, that's the full pipeline and to recap, we define an anthology to keep things consistent, we build a custom ex- a graph rack extractor to extract entities",
+      "timestamp": "00:33:44"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=JTVx6i6MzVw",
+      "videotitle": "GraphRAG: Building a Smarter AI System (full walkthrough)",
+      "text": "and relationships alongside their descriptions, and then we run the community detection algorithm on the graph and generate summaries using an LLM, and then we visualize the graph and build a query engine that reasons over those community summaries. While building this project, I noticed a couple of different things that didn't go quite well. For example, some entities come back with slightly different names. For example, the US Copyright Office versus Copyright Office. So, a lot of those entities can be deduplicated and normalized to make it more consistent and more useful. And there you have it, a full working graph rack system built on live data you script yourself reasoning over one of the most complex and opaque topics right now in tech. You can find the full code in the link in description along with SOAP API if you want to try this on your own research topic. You can also scan the QR here to get the link.",
+      "timestamp": "00:34:45"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "every year in mid-september the egg Nobel prizes are awarded researchers receive recognition for their unusual studies in the spirit of the EG Noble prizes and the current AI hype I decide to create an absurd project of my own building an app that uses a large language model to extract key information about the eight noble prizes research papers including titles summaries authors and years of publication now you might be thinking do we really need to use AI for that well not really you could of course read the papers and extract the information yourself however this type of smart application can be useful for many purposes and use cases imagine having a magical system that helps you automatically extract all the necessary information from unstructured data think PDF documents books business invoices customer queries and even images and then neatly organized information in a table structure you define consider how many hours it could save you if it works",
+      "timestamp": "00:00:00"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "so let's find out in this video we are going to interact with a large language model like GPT 40 in Python using its API then we'll build a document retrieval system to answer our questions based on a given research paper in PDF then we'll take this to a whole new level by getting answers not only as text but also in a structured format that we defined this is now made possible with high accuracy thanks to a new feature from open AI apis called structured outputs we'll dive into that later then we'll also make our app site the exact text sources that we used to generate the answer this will make our application more trustworthy and reliable then we'll go ahead and make the app more userfriendly by wrapping it in a nice looking streamlet interface and finally we containerize and deploy our amazing app using Docker all this may sound a bit complicated but don't worry I'll walk you through every step of the project and discuss high level Concepts so even if you're not familiar",
+      "timestamp": "00:01:03"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "with coding in Python and the technical aspects you can still get a good idea of how things work this video is sponsored by Docker which is an open platform for developing shipping and running applications more on them later as AI becomes more mature businesses realize that one of the most important use cases for AI is information retrieval extracting structured information from unstructured data from a custom knowledge base you can think of this process as sifting through many reports or documents reading them understanding them and finding the right pieces information and organizing them into a structured format like an Excel table let's admit it most of us would try to avoid this kind of task it's tedious and can be extremely timeconsuming yet many office jobs involve these types of tasks to some extent the good news is that this process can now will be automated with great accuracy leveraging Advanced language models like jat TBT and CLA AI",
+      "timestamp": "00:02:05"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "this kind of system is called retrieval augmented generation or rack for short if chat TBT allows us to ask what's Mark zuber's salary the rack system allows us to ask what's Marx's salary according to the given documents according to the 2023 retour report an impressive 36% of Enterprise LM use cases involved of rack technology rack applications are great when the knowledge base contains proprietary sensitive and highly specialized information that out of the box LMS like chat TPT or Cloud AI wouldn't know about in such cases these AI models would likely hallucinate or make up information luckily a rack system can help avoid hallucination by limiting the context and allow the system to refuse to answer when lacking sufficient context it can also site data sources where the answer is based making the system more trustworthy this is a",
+      "timestamp": "00:03:07"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "clear advantage of a rack system compared to fine-tuning a large language model using a custom knowledge base because the language model will still operate like a black box and it's also often a lot more of a technical hurdle so how does a rack system work exactly a rack system contains three main steps the first step is to process the documents and the Second Step based on the the user's question query for Relevant parts of the documents that likely contain the answer and finally craft the response based on those relevant documents using an LM of choice for example open AI models or Cloud AI or even a local LM if you look closely the first two steps comprise the retrieval part that looks up the relevant information from Context and the last step is the augmented generation part where we utilize the reasoning capability of large language models to generate highly accurate and relevant responses based on the retrieved information all right now let me walk you through the code to see how",
+      "timestamp": "00:04:07"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "we can implement this system without further Ado let's get started let's now create a new project folder and I'll call this rack airms I'll also create a virtual environment inside this folder to encapsulate the dependencies of the project and I'll put my virtual environment in a subdirectory called my EnV and then I'll go ahead and activate this virtual environment with this command now let's open this project in vs code you can also use Jupiter lab or Jupiter notebook if you prefer now let's go ahead and create a new Jupiter notebook I'll call it data extraction we first install all the necessary python packages and modules firstly we need L chain which is a flexible framework for building applications with large language models and then we also need to install Lang chain Community which contains essential third party Integrations for Lang chain and then we will also install Lang chain open AI",
+      "timestamp": "00:05:09"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "which is a package that connects Lang chain with openai and then chroma DB which is an open-source Vector database and we'll talk about that later and then we'll also install P PDF which is a package for reading and passing PDF documents in Python and pendas for data wrangling and streamlet for building quick web apps in Python and then we also need python. EnV which is a package for setting environment variables in Python let's run this to install all these packages and note that if you haven't selected your python environment then you need to change to the current virtual environment here now after the installing is done we can go ahead and import these packages and a bunch of modules don't worry about what they are used for yet our explain later when we actually use them in this project we be using open AI models this is just an example in practice we could also use apis from anthropic moli or others if",
+      "timestamp": "00:06:11"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "you want to try different models you could even use an open-source local LM like Lama 3 these open- Source models are free to use but since we often can only run a small version of those models locally you might actually need to compromise a bit on the output quality so so if you want to see the best performance for your task I recommend trying out the most advanced models available and since open ai's API is a paid service you need some credit in your account to be able to use it so if you go to platform. open.com you should be able to sign in with your chat BT account and once you've signed in this is what you should see and under the settings and under this building tab you can see your credit balance and and um note that if your credit balance reaches $0 your API requests will stop working so if that's the case you might want to add to credit balance uh click on this button and add",
+      "timestamp": "00:07:12"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "something like $5 which is the minimum and that is more than enough for this toy project this is my credit balance and actually I've only used a few cents so far so that is pretty inexpensive once that's done we should be good to go now the next step is to create an open a API key so if we click on the default project button over here and go to organization overview you see all your project listed here by default you have a default project in your account I have another project here called YouTube video that I created earlier and to create a new project we go ahead and click on this create button over here we give our project a name so for example I'll say this is rack project and then we can give some description um so um data extraction from PDF documents for example and then somehow we also need to add our business website so I'm just going to add my YouTube channel over",
+      "timestamp": "00:08:13"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "here if you don't have it you can also use other links as well so let's click on create after we have our project we can go ahead and uh click on this API Keys menu here and under this menu we can create a new secret key so click on this button and we will have the name of our API key so I'll just say rack key we assign a project to it so I'll assign the rack project and create secret key all right now we'll make sure to copy this key and go back to our project now to protect our API key we'll create a hidden file inside our project folder we call this file. NV and in this file we will add our open AI API key now let's save this file and going back to our notebook if we run all these loading all these",
+      "timestamp": "00:09:15"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "different modules and packages and if we run this load. EnV function here that we imported from this environment module this function will read all the key value pairs from the EnV file we just created and set them as environment variables and now if we run os. environment. getet um this variable then we'll get back exactly our API key that we set in the EnV file now let me save this variable as open AI API key for reference later and we Define our LM as um the chat open AI which is an integration with openi models that we imported from this L chain open AI package then we will specify the model that we want to use so in my case I'm using the GPD 40 mini which is a small lightweight and also very cheap model and it's very suitable",
+      "timestamp": "00:10:17"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "for smaller tasks and optionally you can also pass in the API key which is the open AI API key variable that we just defined but this is optional because by default this chat open AI class will also take the you know the API key if it's not passed in it will be read from the environment variable that is open API key so since we already set our environment variable we don't need to specify this but for clarity I just add it here so once we've defined our LM we can start using it and we call the invoke method for example I'll pass in a query tell me a joke about cats and now if we run this sale we get back a response why did the cat sit on the computer because it wants to keep an eye on the mouse so this is great our API key is working now let's now dive into the first part of our rack project which",
+      "timestamp": "00:11:19"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "is to process the PDF document I'll go ahead and create a new folder in our project and I'll call that folder data and inside this folder I'm going to add a few sample PDF documents the first paper is about problems with using long words needlessly and the other paper is um estimation of the total saliva volume produced per day in 5-year-old children these are some of the research that actually won the ignorable prices in the past I'll go ahead and add these files into my data folder let's first um load the PDF document we're going to use the P PDF loader um function from L chain and we specify here the path to our PDF file and the name of the file which is open Heimer 2006 blah blah blah and then um we'll load in all the text per Pages if we run this we will be able",
+      "timestamp": "00:12:21"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "to see this Pages variable here contains a list of document objects and each of these document objects represents a page in this PDF and with the metadata containing the source and the page and the page content the next problem is that a single document can be really really long we cannot just pass that giant chunk of text as the context for the LM to answer questions and this is because of a few different reasons firstly there's a token limit to each API request you make for example for GPT 40 model you have up to 128,000 tokens this is a total amount of tokens shared between your prompt and the chat completion this is a lot though this is roughly 100,000 words or a 200 Page book which is a lot but there's a more important reason why we want to split the document into smaller chunks",
+      "timestamp": "00:13:23"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "for document keyway task we are doing the answer to user question often lies is in some specific parts of the document so we want to only feed those most relevant Parts as context into the LMS to draw the answer from this way we can make the process more efficient and even more accurate research has shown that passing too much information and irrelevant information to an LM can actually confuse it and make it more likely to give the wrong answer now at this point we have the documents split into different pages so we have three different pages over here however this might still be too big for our purposes so we want to split the text to even smaller chunks so it could be paragraphs or sentences the idea is that as we split the document into several chunks each chunk is going to be more focused and more relevant when we query the documents to achieve this we can use a",
+      "timestamp": "00:14:24"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "recursive character text printer and this is a function that is available from Lang chain so here we can set the chunk size or how many characters you want a chunk to contain and in this case I set this chunk to be 1,500 and the overlap between the chunks for example I set this is 200 and we can also specify the length function that is how we want to count the characters and we can also specify the separators for the chunks as I don't want to split the chunks in the middle of a word so I'll specify the separators as either page break or line break character or space and this recursive character text splitter will do its best to split our documents into smaller chunks given these parameters and constraints that we specified now we'll go ahead and run the text Splitter on our documents that is the pages from our PDF document if we run this we get",
+      "timestamp": "00:15:25"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "back a list of chunks and in my case I have I think something like 10 different chunks and here you can see that these chunks are smaller than the pages that we had before and here's a rough visualization of how my chunks look like on the documents you can definitely play with this parameters to create smaller chunks or larger chunks depending on your case you can see in my case each chunk roughly corresponds to one paragraph in the research paper it's good to note that if the chunks are too big they might contain redundant and irrelevant information but if the chunks are too small they might not contain enough contact for the LM to generate a good answer now let me save this chunks as the chunks variable now here's an important part to query information from these chunks we need a way to represent the text content numerically if you already know what the text embeddings are feel free to skip this section otherwise I'll give you a very quick explanation of what text embeddings are",
+      "timestamp": "00:16:27"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "text embeddings are a way of representing words or documents as numerical vectors that capture their meaning This Way Text data can be converted into a format that computers can understand and work with these embedding vectors are literally lists of numbers and they are actually huge lists of numbers you can think of them as sort of coordinates in a multi-dimensional space the specific values in the vector don't have any inherent meaning on their own but the relationship between the vectors is important similar pieces of text will have vectors that are closer to each other in this multi-dimensional space and pieces of text that are not much related to each other in terms of meaning will be further apart in this space and how do we know if vectors are close or far from each other the distance between these vectors can be calculated using cosine similarity or eidan distance we don't actually need to calculate that ourselves though there's",
+      "timestamp": "00:17:29"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "a lot of existing functions and packages that can help us do that now there are many different embedding models available ranging from the more naive ones to more complex ones a good embedding model can help better capture the meaning of the text so having good embeddings of our text is crucial for our retrieval system to work well here we are going to use an embedding model from open AI called text embedding Ada 002 and here here we also pass our open AI API key here if we use this embedding function to turn the word cat into a vector if we look at this test Vector variable we see that this is a list a huge vector and this huge Vector has 1536 numbers and we can even see for ourselves how similar or dissimilar two pieces of text using their embeddings here again we can use l chain to calculate the distance between two pieces of text so we'll load the",
+      "timestamp": "00:18:30"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "evaluator we'll Define this as embedding distance and we will pass in the embedding function that we have so if I want to calculate the distance between Amsterdam and coffee shop I think they're quite related to each other CU Amsterdam is really known for coffee shop if we run this we get the score which is the distance of these two strings in terms of their embeddings but if we for example say this is Paris we get a bigger distance and that means that these two strings Paris and coffee shop are less similar than Amsterdam and coffee shop so this is a quick introduction to how embeddings work and how we can use them to evaluate if two pieces of text are related to each other now as we have to create embeddings for a lot of different chunks of text we need a way to create and manage and query these embedding vectors in a smart way and this is where Vector database comes in think of a vector database like",
+      "timestamp": "00:19:31"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "a library in a book Library we have books organized on shelves and we can find them by looking up their titles and authors and a vector database is similar but instead of books we store chunks of information represented in vectors in this project we'll be using chroma database which is an OP Source Vector database it's very fast and simple to use but it's not the only option there's a lot of other Vector databases that can do pretty much the same thing so how do these Vector databases query information exactly when we make a query for example asking what is the conclusion of this paper the database looks at the question also creates an embedding Vector for it and then scans through all the embedding vectors stored in the database to find the ones that are most similar based on a distance metric we Define it then gives you back the correspond chunks in the database that are most related or relevant to your question these relevant",
+      "timestamp": "00:20:32"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "chunks can be later be put together and fed into an aolm for example gbt 40 to generate a good answer to the question that we asked so let's now create a chroma database to store all our Vector embeddings to do this we can use the chroma from documents function which takes our chunks and then use the open AI embeddings function to generate the vector embeddings for each junk I'm also going to specify a path called Vector store and set that as the persistent directory so that when we create this database I have a folder on my disk called Vector store that I can use to load the vector database later on the database should save automatically after we create it but you can also force it using this persist method now if we run this you can see this Vector store folder here created in our project directory let me also wrap this whole thing inside a function called create Vector store that takes our text Chunk",
+      "timestamp": "00:21:34"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "the embedding function and the path to the vector store as arguments there's a little complication here though because if you happen to create Vector embeddings for the same document twice chroma will save these two embeddings as two different chunks so our database will actually contain duplicated documents or duplicated text junks there are many different ways to solve this issue which is out of scope for today but here I've implemented a quick filter here to filter for Unique documents and only add the unique documents with unique content to the database it's just a small thing to be aware of and I wouldn't go into detail in this video here I just use a new Vector store path so that it doesn't mix up with the other with the previous one that I created also be aware that we are using a p API from open AI to create the embeddings so if you embed a very very large documents it can be costly but so far for me it's",
+      "timestamp": "00:22:37"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "been pretty okay for small documents with a few pages it costs almost nothing to a few cents all right now that we have created the vector database that represents the information chunks in our document we can now go ahead and query it we first load the database I'll call it Vector store again and then we can use it to instantiate a retriever using the S retriever method from langin and here we can specify the search type there are a couple of different search types that are available and here I'm using similarity which uses cosine distance to determine similarity by default this function will give the four most relevant chunks now if we call the invoke method from this retriever for example if I ask what is the title of the article we get back the most relevant chunks we can feed this into open AI model to create a high quality response using that data as our source first we need a prompt template to create a prompt with you can use",
+      "timestamp": "00:23:37"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "something like this I specify some kind of system prompt so you are an assistant for question answering tasks use a following pieces of retrieved context to answer the question if you don't know the answer say that you don't know don't make up anything and notice there's a placeholder here for the context that we're going to pass in so this is going to be the chunks of information that we got from the Retriever and then the second input is the question or the user query and then we can create the actual prompt using the prompt template passing in the context text and the question or the user query into this prompt template so if we print out this prompt we get something like this it's going to be the entire prompt with all the chunks of information and together with the query that you asked now if we pass this prompt to our LM so that is the gbt 40 Mini model we get back a response with the answer so the title of the article is blah blah blah this is the correct",
+      "timestamp": "00:24:38"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "answer and that's great we can certainly do all these steps by ourselves but using L chain we can also do it another way so L chain has something called L chain expression language it is a way to chain all the steps and functions together all the querying steps that we just did is equivalent to creating a chain that looks like this so we'll pass in the context so from the retriever we'll get the formatted docs which is basically the concatenation of all the information chunks together and then we have the user question as the input and then the context and the question will be passed into the prompt template to create a actual prompt and then that prompt will be passed to the LM to actually generate the answer and here if we pass the question to our chain it will give us the exactly same output and here's the fun part suppose we don't want to get back the answer as just a string but we want to get back the answer in a certain structure so that we can easily pass that into a table we can",
+      "timestamp": "00:25:38"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "achieve that by creating a desired output structure using a pantic class pantic is a data validation library for Python and here I'm creating a class called extracted info and this class will specify the structure that I want the output to be so firstly I have the paper title I have the summary and publication year and paper authors and we can specify the desired data type for our answer so for example paper title will get the string type and publication year will get the integer type and then all we need to do is that in the chain that we created earlier We'll add the LM with structured output and then pass in the pantic class over here so that is the extracted info class that we just created also set the strict parameter here the true and this will make sure that the output structure will also be validated using the openai API structured outputs as well and then if we invoke this chain asking what are the",
+      "timestamp": "00:26:40"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "information about the researched article including um the title summary publication year and authors it will give us the output that has this structure that we defined and what is even cooler is that we can also specify the structure of each of these items for example if I want to not only get the answer but also the sources and the reasoning of the answer then I can also create another class that is the answer with sources class and here I say I want to have the answer and then I want to have the sources which is basically the full direct text junk from the context that is used to answer the question and I also want to have the reasoning that explains the reasoning of the answer based on the S sources so if I try this I'm going to get back like a nested structure that contains the answer the sources and the reasoning for each of the items that I specified earlier now all we need to do is to put this",
+      "timestamp": "00:27:42"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "structured response into a table format using pandas and yeah here we go now that we have everything in our app working we can clean up the code and create a nice streamlet app in case you're not familiar with it streamlet is a quick and easy framework to create small python apps and it's beyond the scope this video to explain the detail of streamlet so I'm going to speed up this section and let me now create an app folder inside our project folder and then I'm going to put all the code for the streamlet app together with all the functions we need for our app let me also create a requirements.txt file that list all the packages that are necessary to properly run our app to run the app loow locally we do streamlet run and the name of the Python file now you might be thinking how can we share our app with other people in this section we're going to talk about how to deploy our streamlet app there's a lot of different ways to deploy and share your app with",
+      "timestamp": "00:28:43"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "the word you can choose to directly deploy our streamlet app on streamlet community Cloud which requires to make all the code public for this app I don't particularly want to do that so I'll be deploying it using Docker Docker is is a tool that can package and deploy your application in a container when you share this container with your colleagues they don't need to worry about installing all the parts and dependencies to run your app Docker make sure everything your app needs is right there ready to go also for yourself when you dockerized your app you can run it anywhere and on any operating system and also without the need to install all the necessary dependencies on your computer you might be wondering what is the difference between Docker and python virtual environments well the main difference is that with a python virtual environment you can switch between Python versions and dependencies but you are stuck with your own operating system on the other hand a Docker container incapsulate an entire operating system",
+      "timestamp": "00:29:44"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "providing a small isolated machine in your system so when you use Docker you can swap out the entire operating system install and run your app on any system including Mac OS Ubuntu windows and so on so let me break down the key components of Docker in simple terms first we have the docko file think of this as the blueprint or the recipe for your app it's essentially a text file with step-by-step instructions on how to set up our app preparing everything it needs to run this includes things like operating system python version and any libraries your app requires and then when you build your Docker file Docker takes those instructions and creates a Docker image this is like a snapshot of your app and its environment created by following the recipe in your Docker file this image is like a portable pre-cooked meal ready to be served and finally when you run a Docker image you create a Docker container and this is like taking that precooked meal and actually serving",
+      "timestamp": "00:30:47"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "it it is a live up and running instance of your app isolated from other processes on your computer now let me walk you through how to deploy our TriMet app with Docker firstly we want to install the latest version of Docker desktop and this will provide the docker engine and the command line interface be sure to choose the right installer for your computer and in my case I'm installing for the Mac OS and I'd also recommend to install the dock C extension for vs code and this will make our lives much easier now that we understand the basics and have all the things we need now we can go ahead and create a Docker file and you can see Visual Studio code will automatically recognize this file as a Docker file now inside this file we start with a python based image if you search for Docker python you can see a bunch of different python versions are available here in my case I prefer the python version 3.11 so in the docker",
+      "timestamp": "00:31:49"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "file I'm going to say from python 3.11 like so and next we'll set up a directory in our container to to hold our app so we'll say work directory is the app folder and this will create and switch to a directory code app in our container now it's time to add our streamlet app to The Container so I'm going to add all the files in our app to The Container this dot represents our current directory and this dot represent the app directory in the container so this copies all the files in our current directory into the app directory in the container next up we'll install the requirements we say run and then pip three install and- R and requirements.txt and this will install all the python packages our app needs in The Next Step we'll expose the port and streamlet typically runs on Port 8501 so we expose that this basically tells Docker that our container will use this",
+      "timestamp": "00:32:50"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "port to run it on our browser optionally we can add the health check command to tell Docker how to test a container to check if it's still working and finally we add our Command to start our streamlet app so here we say streamlet run and the name of the pi file for our app that is the streamlet app.py file and there we have it we have completed the docker file now it is time to build the docker image based on the docker file now in the terminal we're going to make sure that we are in the directory containing the docker file and and the streamlet app file and then we run this command Docker build Docker build is a command to create an image and then- T that is to tag our image and we specify a name for our tag so we say this is streamlet app and the dot here at the end tells Docker to look for the docker file in the current directory you see Docker going through each step in your",
+      "timestamp": "00:33:52"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "Docker file pulling the base image installing dependencies and setting everything up this might take a few minutes for the first time and once the image is built we can run it as a container using Docker desktop or using the terminal with this Docker run command I'm showing either way we should see the output indicating that streamlet is running and if all went well you should see our streamlet app is running if you want to share your Docker image with other people it's often recommended to use Docker Hub which is a cloud-based Central registry to store Docker images Docker Hub to Docker is just like GitHub to get if you don't want to use dockerhub the other option is to save your Docker image as a tar file then if you send this file to someone else they can load the docker image from this tar file and run the application on the computer congratulations for sticking to the end of this tutorial and I hope this in-depth tutorial inspires you to build your own RM powered app in Python",
+      "timestamp": "00:34:54"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EFUE4DHiAPM",
+      "videotitle": "Extracting Structured Data From PDFs | Full Python AI project for beginners (ft Docker)",
+      "text": "special thanks to Docker for sponsoring this video you can check out their website and documentation to find out more about their other features and if you want to level up your coding in Python to tackle projects like this you can check out my python for AI projects course Link in description and be sure to sign up to my newsletter for more insights and updates thank you for watching bye-bye [Music]",
+      "timestamp": "00:35:55"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "chat CBT API was released just a few days ago at the time of making this video which is the same model underlying the chat triple product while being 10 times cheaper than the other existing GPT 3.5 models tools like chat TPT is trained on a lot of different data sources on the internet some of which we don't even know but what if we want to build a little chatbot that only uses your own custom data source something that you trust like Reddit threads so in this video we'll be building an ask me anything chatbot that answers all your questions about data science machine learning and AI based on the content from some popular subreddits in this area by the end of this video we'll be deploying an interactive notebook with the chatbot that you can share with other people with a simple link and with this chatbot we can truly harness the power of Reddit wisdom we go through a few different steps in the first half of the video we'll be retrieving the Reddit posts and comments related to data science in using Reddit API using this",
+      "timestamp": "00:00:00"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "data we first do some exploration firstly to find out the trending data science topics on Reddit what is the sentiments and even people's emotions around topics such as chat TPT stable diffusion Etc in the second half of this video we'll take on the main challenge that is to build a chatbot using chat typical API and this Reddit data set we'll be developing this project using data load a collaborative data science platform from dead brains who has kindly sponsored this video without further Ado let's get started okay first thing first we need the data for this project I chose to collect data from Reddit because it has a great free API while Twitter's API is unfortunately no longer free Reddit is actually most popular in the US so in case you're not familiar with it Reddit provides a public forum for communities with similar interests to discuss and exchange ideas this was my first time collecting Reddit data so just like any well versed data scientist nowadays I went on chat TPT to ask for",
+      "timestamp": "00:01:02"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "the source code it suggests me to use the python Reddit API wrapper Library I followed all the steps and got pretty pumped up that this is gonna be easy peasy unfortunately the code didn't work it seems to be using an old method from this API that no longer exists so okay here goes the same old research browsing stack Overflow and digging through the API documentation Reddit API is pretty cool it allows you to get the most up-to-date information the only catch however is that the maximum number of listings you can pull each time is 1000 there are some other third-party apis such as push shift API unfortunately I tried it and found that push shift API is not very stable in the end I went for the Reddit API which I think should be sufficient for our projects alright let's go to data lore website and create an account I'll sign in using my Gmail and you can choose the free tier here if you just want to try it out and remember that you can also do this project on",
+      "timestamp": "00:02:04"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "your local computer the difference here is that it's a lot more convenient on dinner lore and there are many useful features that can help you get something up and running very quickly you can perform a complete data science pipeline here on data lore from querying data Eda model training to presenting results to stakeholders as interactive reports or data apps in addition to that you can collaborate in real time on the code with friends and colleagues and even schedule notebooks to run and update the reports automatically a unique feature of data law compared to other online platforms is that if you're working with sensitive data your team can host a private version of the law Enterprise on AWS Google Cloud platform Azure and on-premises this way your data doesn't need to leave your company's environment okay after you you've signed in we get to the project space on data lore you can take a look at some sample notebooks",
+      "timestamp": "00:03:06"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "here and play around with them to have a feeling of how things work now let's create a new notebook and call it get red data we can choose the kernel here we are using Python and also you can choose the different machines here as well I'm using the professional plan so there are some crazy large computer options here which could be very useful if you are working on a large project or if you just want to speed up the competition we first need to install the python Reddit API wrapper Library you can use pip install as usual but on data law you can simply go to the environment manager to search for the package and you can simply click on this icon to install it unlike other apis Reddit API is somewhat difficult to work with at the beginning in the sense that you have to do some extra things firstly we need to go to the app preference website here and scroll down to the bottom of the page and click the ru developer create an app",
+      "timestamp": "00:04:06"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "button so now we have a few fields to fill out we'll select script and for the name you can fill in whatever you feel like in this case I'll just fill in get data and the description is not required about URL also not required and finally redirect URL you can use the localhost 8080 to reference to your local machine after hitting submit you get to a screen which includes your client ID on the top left and your secret key in the middle you need to use this in a moment after we are done with this weird setup step here comes the good part getting the data to retrieve Reddit data we need to create a read Reddit instance that takes the client ID and secret that Reddit assigned to you earlier and also the redirect URL being the localhost URL and user agent being your Reddit username in my case it is hopeful contribution for a useful thing to know is that on data law",
+      "timestamp": "00:05:10"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "you can also hide your secret keys so that other people who view your notebook can't see your secret Keys such as the API Keys you can do this by going to your account account settings and under the secret tab you can create your own secret key and then you can attach this secret key to your current notebook like so after you've restarted the kernel you should be able to access the value of your secret key using the OS environment method I find it really handy to make sure your key is safe for now don't abuse my API key okay now moving on to the first task we'll pull the post or submissions as how they are called on Reddit from the three popular subreddits machine learning artificial and data science it's actually quite simple I'll just take the example from the API documentation here and copy it here this piece of code basically pulls the top",
+      "timestamp": "00:06:12"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "submissions of all time in the Reddit Dev and Learn Python subreddits there also other methods such as hot and new to pull the hot and the new topics that can also be interesting depending on your goals and we can also set the time filter to be in the last hour last day last week or the entire history we modify this good a little bit to make it pull the data from the three subreddits that we are looking into and we'll set the limit to the maximum which is one thousand okay after a minute or so this is done running if we take a look at the output you can see that it's a list of submission objects in the Reddit API documentation you can find all the attributes of this object you can see that we have quite some information here such as post ID post title URL that created of the post I'll go ahead and select a few attributes that I find most useful and we want to append all the",
+      "timestamp": "00:07:13"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "post data in a data frame we can also set the limit to 3000 because we have three subreddits here so here we go in this post data set we have about 3 000 posts which makes sense because we queried 1 000 posts per each of these subreddits let me quickly convert this into a function to make it more clean and also write the post data to a CSV as well in the next step we are going to use these post IDs here to retrieve the comments from those posts Reddit API also has a method for this you can choose to only retrieve the top level comments but in this case I think it'll be more interesting to retrieve all the comments from a post so we copy this code and we can try it for one random post ID you can see that it's working so it's great now to get the comments for all the posts that we have or initialize an empty comment list here then we'll go ahead and create a for",
+      "timestamp": "00:08:14"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "Loop to Loop through all the post IDs in the post DF data frame then we just copy paste the code in to this function now for each comment in the comment list we want to append the post ID and the comments to the comment list and finally we just convert this list to a data frame and save it to a CSV file I won't run this cell again now because last time it took me almost three hours to pull 200 000 comments so let's just pretend it's all done and the CSV file has been saved if you go to the notebook files menu you can see here we have two CSV files here one for the post and one for the comments you can double click on it to view the file in a larger window which is pretty nice now that we have all the data we need let's move on to the next part of the project just to separate this part from the data retrieval part we will create a new notebook called Reddit Eda and chatbot we first import some packages like",
+      "timestamp": "00:09:15"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "pandas daytime matplotlib pilot Seaborn that we need for data visual session letter and we also import the Transformers package from hugging face that we will use for sentiment analysis later now we'll go ahead and import the post data sets and the comments data sets that we've just created with Reddit API oops I forgot that we have a different notebook now so I just downloaded the data files from the other notebook and upload it here there's a couple of small things we want to do before moving to further analysis looking at the post data sets you can see that the created UTC column is now in the timestamp format instead of the date format this is not so useful so I'll go ahead and create a create a date column that converts the date from the timestamp format to the date time format we'll also create a column to store the year of the posting data so this will be",
+      "timestamp": "00:10:16"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "useful for analyzing Trends over the years in a bit and now we can view the data set and you see that we have the normal date time format here next we want to merge the post and the comments together by the post IDs such that we know little which comments belong to Wix post that's it and now it's time to do some more exciting stuff let's first take a closer look at the post data set and see what's going on here on data loan notebook you can easily explore data that you can do simple sorting and filtering by the column for example you can find out which post has the highest number of comments you can also take a look at the statistics tab over here it's really really handy you can see here the data distribution and the descriptive statistics for each column from my experience I can tell you this can save a lot of time getting to know the data there are also some little graphs here to show you the data distribution another fun thing is the visualization tab where you can plot out",
+      "timestamp": "00:11:17"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "some graphs one thing I want to know is how these three thousand posts spread out over the years we can make a bar chart with x-axis being the created year and the y-axis being the count of the posts and the color we can pick a color or we can also choose a column to be the coloring so we can choose for example subreddit as the color we can see that our 3000 top posts are mostly in recent years which makes sense because data science and AI are quite Hot Topics these days they're also slightly more top posts in data science subreddits than in machine learning or artificial intelligence subreddits I think this visualization is quite nice so we can export it to a chart cell or as a gold cell with the code cell you can actually see the code underlying this chart which is very cool so we got to know a little bit more about the data now the next thing we want to find out is what are the trending terms or topics do people",
+      "timestamp": "00:12:19"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "talk about in the past years we can do this by plotting a word cloud to have a feeling of that so I'll just combine all the post titles together in this post title text variable then we can create a word cloud based on those words in the in this post title then we can create a word cloud based on the words appearing in those post titles we can set the collocation threshold here to two so that we can cut the collocations or compound words that have two words like machine learning data science deep learning Etc it's no surprise that terms like data science machine learning deep learning and AI are very often mentioned in those post titles now I'm also curious what if we look at the word cloud by year how would the trending topics five years ago different from the trending topics today we can do this interactively so far we've only been using the code cells and the markdown cells but you can also create many",
+      "timestamp": "00:13:20"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "different input cells such as drop down slider text input button etc for the years I think it's nice to use a slider so I'll go ahead and choose a slider for this and we can set the label of the slider and the variable underlying the slider I'll select here the minimum value of 2014 and the maximum value of this year which is 2023 and then we'll just subset the post if the created year is equal to the selected year and then we'll run the word cloud using this subset of the post titles you can see that in 2014 there was really not much we have some probably some people talking about Jan lekun's paper and some neural network stuff but it's really not much but fast forward to 2022 we have a lot of posts about his machine learning and also stable diffusion Dali 2 which was also really the highlight of last",
+      "timestamp": "00:14:20"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "year and unfortunately we don't see chat TPT here for some reason I do see some very small words like as chat typically but it's really not much compared to other topics since people maybe like you and I have been really excited about the advancements of AI in the past few months I think it would be quite cool to analyze the comments related to chat Deputy or stable diffusion and see how positive or negative they are there is a lot of sentiment analysis models that are already pre-trained so we don't need to train them ourselves I found some quite nice models for from hugging face I'll use the model that was trained on the Tweet data set because it seems to be the similar type of Text data that we have with Reddit I'll go ahead and load the sentiment classification model using the Transformers pipeline module it will take a few moments to load in and we can try out this model for example if we say I love you the model classifies this as almost 100 positive which is correct and",
+      "timestamp": "00:15:21"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "how about I don't love you okay this is negative so this is working you can play around with this to have a feeling of how accurate the model is and then just create a function to use this model to classify the text and output the sentiment of the text sometimes you might run into errors when running the model I think probably because if the text is too long I didn't manage to look into this issue so I just do a quick and dirty try and accept here so if we get an error then I will assign the sentiment as not classified now we want to filter the comments post DF data frame if the post title contains the word for example chat CBT so we have a few comments here and now we can actually create a sentiment column to classify the comments we can simply do a Lambda function here to get the sentiment for each of the comments now I just do a little visualization here to see the distribution of the sentiments for the chat typical comments a lot of",
+      "timestamp": "00:16:23"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "them are actually neutral but we have quite some negative comments here and we have also a small amount of positive comments I think a lot of negative comments are probably just people debating with each other and get angry with each other so now we'll do a step further we want to recognize emotions in those comments on hugging face I also found a pre-trained model for this purpose of recognizing emotion in text so we're loading this model and we can try some some text here for example if I say ice cream is delicious we can see that it has very high score on Joy so that's most likely correct so similarly we'll also create a get emotion function that takes the text as input and run the text through the emotion classifier and then we'll sort the prediction scores from highest to lowest and just return label with the highest score now with this function we can also create an emotion column that classify the emotion",
+      "timestamp": "00:17:26"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "of the comments if we take a look at the distribution of the motion we can see that a lot of comments are actually joy and quite some of them are also anger and sadness it might also just be that these emotions are most popular human emotions but to compare the emotions towards charity with emotions towards stable diffusions for example we can also do it interactively as well you can create a text input box here and we you can then let users type in the texts so letter in the interactive reports users can choose different words and different topics to explore their sentiments and emotions the exploratory analysis we just did are nice for General insights but an even more powerful way to utilize this huge Community generated data that we have is to make it available in a chatbot format to do this we can augment a large language model such as the gbt 3.5 turbo that is underlying chat CPT",
+      "timestamp": "00:18:27"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "with our own Reddit data this is also called in context learning where we insert context into the inputs prompt and that way we can take advantage of the large language models reasoning capabilities to generate answers to our questions one simple way to do this with chat TPT for example is you can say the context information is below blah blah blah and then given the context information and not prior knowledge answer the question and then you can insert your question here however there is a problem with this approach that is there is a token limit to The Prompt that is around 4 000 tokens for chat TBT and similar language models like DaVinci so to pass on large context data like our Reddit comments we'll need to use a package called Lama index it separates from open Ai and this package basically helps us to do a few things firstly it will create an index of the text chunks from the context and when a user asks a",
+      "timestamp": "00:19:27"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "question it will find the most relevant chunks and finally it will answer the user's question using the large language model that we Define and the most relevant chunks found in the context so in short this llama index package can help you bypass the prompt size limit with the indexing method it's also interesting to know that the package can also help you connect your large language models with many different external data sources for example from web pages also Google doc Twitter and so on this is very handy if you want to use information from these different data sources now let's first install lamba index and long chain which is another package that helps us interface with the large language models so let's import some of the necessary modules from these packages I'll spare you the details for now and we'll see in a bit what these different modules are useful for now we'll need to create the context file which is in our case just a large text file combining all the text from the",
+      "timestamp": "00:20:30"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "Reddit posts and the comments that we have retrieved I think it's best to aggregate all the comments for each post and then we'll concatenate the post title the body text of the post and the comments together this way we can sort of preserve theological order of the Text corpus so we'll first select the three text columns here that is the post titles the post body tags and the comments columns and we can do a group Buy on the post title and the self text and we can concatenate all the comments together into a large chunk for each post this is how this aggregate data frames looks like it has nearly 3 000 rows each row for one post with all the comments finally we can create a combined text column by joining all the three columns together and finally we can concatenate every everything into this old text variable and let's quickly create a separate photo called Text data and now we can save the text into a text",
+      "timestamp": "00:21:30"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "file called or text reddit.txt in this text Data folder now after this is done the next step is to create a function to construct the index from this text file this part is actually quite high level so I'll just paste this whole thing here I actually adapted this code from another project by Dan shipper where he built a chatbot from the archive data from from a well-known newsletter you can find the link in the description below I've adjusted this function slightly to use the chat TPT API which is the GPT 3.5 turbo model this function will index the Text corpus from a directory that we pass on to it and then save the index object into a Json file you can adapt some of these parameters here in this function such as the size of the output tokens in other words how long you want the answers to be and the maximum chunk size overlap and chunk size limits then we Define a function that's basically our chatbot that text users question as a string variable this",
+      "timestamp": "00:22:32"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "function will first load in the index object that we created with the function above and then we generate the response using this index object and then we'll display both users question and the Bots answer now to run this create index function we need an open AI API key I bet many of you already have one if you've played around with chat TPT before if you don't have it yet you can go to your openai profile and generate a new API key we then attached this API key to our environment we'll take it as an input because we want to use the API key of the chatbot users not our own API if all of you are using my API key I'd be broke but for the demonstration purposes I'll paste my API key over here now we can run the construct index function we can copy the path to our text Data folder and paste it here to the function parameter this will take a few moments depends on how large your Text corpus is and after this is done",
+      "timestamp": "00:23:35"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "you should see an index.json file created in your project directory be careful that this step costs money so if you have a large tax Corpus file just try to estimate how many tokens it is and how much you're expecting it to cost in my case it cost me just a few cents for this project so I think it's probably not often a big deal also chat TBT API is much cheaper than the other models so that helps now we'll create a text box for user to input his question foreign ly we can run the chatbots I want to ask a few questions here so firstly I will ask how to learn data science this is what you guys ask me all the time the bot says to learn data science it's important to understand the fundamentals of mathematics statistics and computer science and also strong understanding of data analysis their visualization and machine learning this is pretty good and",
+      "timestamp": "00:24:36"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "I'll probably tell you the same and if I ask is it hard to learn data science the bottles say no it is not hard to learn data science this would probably give you a lot of comfort after all the hard work the final step is to share this project with others you can simply share the notebook by click on share and you can choose to give users view or edit access and then simply copy the link and share it another fantastic option is to turn your notebook into an interactive report where people can play around with the interactive elements like slide video and text box that we just created so once the values of those inputs are changed the cells that use those values will be automatically recalculated so to do this click on build reports and you can select the cells you want to keep in your report and rearrange them as you wish and when you're done you can click on update reports in this drop down you want to select the interactive report instead of the static report and voila",
+      "timestamp": "00:25:36"
+    },
+    {
+      "videourl": "https://www.youtube.com/watch?v=EE1Y2enHrcU",
+      "videotitle": "Building a Chatbot with ChatGPT API and Reddit Data",
+      "text": "that is it this is how you can create and share an interactive Report with others using data loan notebook there are also tons of cool ideas you can develop based on this project for example you can create a chat bot that uses your diary entries to answer questions about yourself and even helps you write your netting profile or a question answering chatbot based on an article or based on the content from your favorite YouTube channel like my channel I hope you enjoyed this project video and got some inspiration on how to build a chatbot using the chat TBT API AI you can find the data loan notebook Link in description if you decide to give their law a try let me know in the comments section what you think about it again if you got value from this video please smash the like button and subscribe if you haven't already to see more videos like this also check out other project videos on my channel thank you for watching bye foreign",
+      "timestamp": "00:26:37"
+    }
+  ]
+}

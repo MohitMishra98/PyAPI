@@ -1,0 +1,5 @@
+sentence_transformers 
+numpy
+groq
+python-dotenv
+qdrant-client

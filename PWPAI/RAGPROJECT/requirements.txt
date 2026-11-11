@@ -1,0 +1,6 @@
+youtube-transcript-api
+yt-dlp
+python-dotenv
+sentence-transformers
+groq
+qdrant-client
