@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SparkCanvas } from './components/SparkCanvas';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { CoreBenefits } from './components/CoreBenefits';
@@ -14,19 +15,22 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-[#e5e9f0] selection:bg-blue-600/30 selection:text-white">
-      <Navbar onOpenAccess={() => setIsModalOpen(true)} />
-      <main>
-        <Hero onOpenAccess={() => setIsModalOpen(true)} />
-        <CoreBenefits />
-        <DayTimeline />
-        <ToolDock />
-        <UseCases />
-        <Pricing onOpenAccess={() => setIsModalOpen(true)} />
-        <Faq />
-      </main>
-      <Footer />
-      <AccessModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    <div className="min-h-screen bg-[#07090e] text-[#e5e9f0] selection:bg-blue-600/30 selection:text-white relative">
+      <SparkCanvas />
+      <div className="relative z-10">
+        <Navbar onOpenAccess={() => setIsModalOpen(true)} />
+        <main>
+          <Hero onOpenAccess={() => setIsModalOpen(true)} />
+          <CoreBenefits />
+          <DayTimeline />
+          <ToolDock />
+          <UseCases />
+          <Pricing onOpenAccess={() => setIsModalOpen(true)} />
+          <Faq />
+        </main>
+        <Footer />
+        <AccessModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      </div>
     </div>
   );
 }
